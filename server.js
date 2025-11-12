@@ -14,3 +14,18 @@ app.get('/api/message', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
 });
+
+client.collectDefaultMetrics();
+
+// Metrics endpoint for Prometheus
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', client.register.contentType);
+  res.end(await client.register.metrics());
+});
+
+const express = require('express');
+const client = require('prom-client');
+
+
+
+
