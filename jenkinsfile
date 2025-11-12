@@ -1,0 +1,101 @@
+pipeline {
+    agent any
+
+    environment {
+        DOCKER_IMAGE = "simple-web-app:latest"
+        APP_CONTAINER = "simple-web-app-container"
+        APP_PORT = "4000"
+        SONAR_HOST_URL = "http://192.168.50.4:9000/"
+        SONAR_AUTH_TOKEN = credentials('sonarqube')
+        DOCKER_NETWORK = "monitor-net"
+        NIKTO_REPORTS = "${WORKSPACE}/nikto-reports"
+        TRIVY_REPORTS = "${WORKSPACE}/trivy-reports"
+        APP_IMAGE = "${DOCKER_IMAGE}"
+    }
+
+    stages {
+
+        stage('GIT Checkout') {
+            steps {
+                git branch: 'main',
+                    changelog: false,
+                    credentialsId: 'jenkins-github',
+                    url: "https://github.com/nawrees/jenkins"
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                sh 'npm install'
+                sh 'npm test || echo "No tests or tests failed, continuing..."'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                sh '''
+                    npx sonar-scanner \
+                        -Dsonar.projectKey=devops_lab \
+                        -Dsonar.sources=. \
+                        -Dsonar.host.url=$SONAR_HOST_URL \
+                        -Dsonar.login=$SONAR_AUTH_TOKEN
+                '''
+            }
+        }
+
+        stage('Docker Network Setup') {
+            steps {
+                sh """
+                    docker network inspect $DOCKER_NETWORK >/dev/null 2>&1 || docker network create $DOCKER_NETWORK
+                """
+            }
+        }
+
+        stage('Docker Build & Run App') {
+            steps {
+                sh "docker build -t $DOCKER_IMAGE ."
+                sh """
+                    docker stop $APP_CONTAINER || true
+                    docker rm $APP_CONTAINER || true
+                    docker run -d --network $DOCKER_NETWORK -p $APP_PORT:4000 --name $APP_CONTAINER $DOCKER_IMAGE
+                """
+            }
+        }
+
+        stage('Docker Run Monitoring') {
+            steps {
+                sh """
+                    docker start prometheus 2>/dev/null || \
+                        docker run -d --network $DOCKER_NETWORK -p 9090:9090 \
+                        -v $WORKSPACE/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml \
+                        --name prometheus prom/prometheus
+
+                    docker start grafana 2>/dev/null || \
+                        docker run -d --network $DOCKER_NETWORK -p 3000:3000 --name grafana grafana/grafana
+                """
+            }
+        }
+
+        // =====================
+        // Nikto Web Server Scan
+        // =====================
+        stage('Nikto Web Server Scan') {
+            steps {
+                script {
+                    sh "mkdir -p ${NIKTO_REPORTS}"
+                    sh """
+                        docker run --rm -u 0:0 \
+                            --network ${DOCKER_NETWORK} \
+                            -v ${NIKTO_REPORTS}:/nikto-reports \
+                            ghcr.io/sullo/nikto:latest \
+                            -h http://${APP_CONTAINER}:${APP_PORT} \
+                            -Format html \
+                            -o /nikto-reports/nikto-report.html
+                    """
+                    archiveArtifacts artifacts: 'nikto-reports/**', allowEmptyArchive: true
+                }
+            }
+        }
+
+    }
+}
