@@ -6,7 +6,7 @@ pipeline {
         APP_CONTAINER = "simple-web-app-container"
         APP_PORT = "4000"
         SONAR_HOST_URL = "http://192.168.50.4:9000/"
-        SONAR_AUTH_TOKEN = credentials('sonarqube')
+        SONAR_AUTH_TOKEN = credentials('sonar')
         DOCKER_NETWORK = "monitor-net"
         NIKTO_REPORTS = "${WORKSPACE}/nikto-reports"
         TRIVY_REPORTS = "${WORKSPACE}/trivy-reports"
