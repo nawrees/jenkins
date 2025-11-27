@@ -23,7 +23,6 @@ app.get('/metrics', async (req, res) => {
   res.end(await client.register.metrics());
 });
 
-const express = require('express');
 const client = require('prom-client');
 
 
