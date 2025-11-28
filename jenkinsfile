@@ -62,10 +62,9 @@ pipeline {
         stage('Gitleaks Scan') {
             steps {
                 script {
-                    // Create reports folder
                     sh 'mkdir -p gitleaks-reports'
 
-                    // Run Gitleaks and generate report
+                    // Run Gitleaks
                     sh """
                     docker run --rm -v $WORKSPACE:/code zricethezav/gitleaks:latest detect \
                         --source /code \
@@ -73,14 +72,11 @@ pipeline {
                         --report-path /code/gitleaks-reports/gitleaks-report.json || true
                     """
 
-                    // Archive the report for viewing
+                    // Archive report
                     archiveArtifacts artifacts: 'gitleaks-reports/**', allowEmptyArchive: true
 
-                    // Optional: print number of leaks
-                    sh """
-                    leaks=\$(jq '. | length' gitleaks-reports/gitleaks-report.json)
-                    echo "Gitleaks detected \$leaks leaks."
-                    """
+                    // Print raw report
+                    sh 'cat gitleaks-reports/gitleaks-report.json'
                 }
             }
         }
