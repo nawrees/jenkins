@@ -52,7 +52,7 @@ pipeline {
                 """
             }
         }
-
+///
         stage('Docker Build App') {
             steps {
                 sh "docker build -t $DOCKER_IMAGE ."
