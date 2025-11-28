@@ -53,9 +53,34 @@ pipeline {
             }
         }
 
-        stage('Docker Build & Run App') {
+        stage('Docker Build App') {
             steps {
                 sh "docker build -t $DOCKER_IMAGE ."
+            }
+        }
+
+        stage('Gitleaks Scan') {
+            steps {
+                script {
+                    // Create reports folder
+                    sh 'mkdir -p gitleaks-reports'
+
+                    // Run Gitleaks in Docker mode
+                    sh """
+                    docker run --rm -v $WORKSPACE:/code zricethezav/gitleaks:latest detect \
+                        --source /code \
+                        --report-format=json \
+                        --report-path /code/gitleaks-reports/gitleaks-report.json
+                    """
+
+                    // Archive the report
+                    archiveArtifacts artifacts: 'gitleaks-reports/**', allowEmptyArchive: true
+                }
+            }
+        }
+
+        stage('Docker Run App') {
+            steps {
                 sh """
                     docker stop $APP_CONTAINER || true
                     docker rm $APP_CONTAINER || true
@@ -119,27 +144,16 @@ pipeline {
 
     }
     post {
-        success {
-            sh """
-            curl -X POST --data-urlencode "payload={
-                \\"channel\\": \\"#nouveau-canal\\",
-                \\"username\\": \\"jenkins-bot\\",
-                \\"text\\": \\"✅ Pipeline succeeded: ${JOB_NAME} #${BUILD_NUMBER}\\",
-                \\"icon_emoji\\": \\":tada:\\"
-            }" \
-            https://hooks.slack.com/services/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
-            """
-        }
-        failure {
-            sh """
-            curl -X POST --data-urlencode "payload={
-                \\"channel\\": \\"#nouveau-canal\\",
-                \\"username\\": \\"jenkins-bot\\",
-                \\"text\\": \\"❌ Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}\\",
-                \\"icon_emoji\\": \\":x:\\"
-            }" \
-            https://hooks.slack.com/services/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
-            """
-        }
+    success {
+        sh '''
+        curl -X POST --data-urlencode "payload={\"channel\":\"#nouveau-canal\",\"username\":\"jenkins-bot\",\"text\":\"✅ Pipeline succeeded: ${JOB_NAME} #${BUILD_NUMBER}\",\"icon_emoji\":\":tada:\"}" https://hooks.slack.com/services/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
+        '''
     }
+    failure {
+        sh '''
+        curl -X POST --data-urlencode "payload={\"channel\":\"#nouveau-canal\",\"username\":\"jenkins-bot\",\"text\":\"❌ Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}\",\"icon_emoji\":\":x:\"}" https://hooks.slack.com/services/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
+        '''
+    }
+}
+
 }
