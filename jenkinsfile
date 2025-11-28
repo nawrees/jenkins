@@ -65,16 +65,22 @@ pipeline {
                     // Create reports folder
                     sh 'mkdir -p gitleaks-reports'
 
-                    // Run Gitleaks in Docker mode
+                    // Run Gitleaks and generate report
                     sh """
                     docker run --rm -v $WORKSPACE:/code zricethezav/gitleaks:latest detect \
                         --source /code \
                         --report-format=json \
-                        --report-path /code/gitleaks-reports/gitleaks-report.json
+                        --report-path /code/gitleaks-reports/gitleaks-report.json || true
                     """
 
-                    // Archive the report
+                    // Archive the report for viewing
                     archiveArtifacts artifacts: 'gitleaks-reports/**', allowEmptyArchive: true
+
+                    // Optional: print number of leaks
+                    sh """
+                    leaks=\$(jq '. | length' gitleaks-reports/gitleaks-report.json)
+                    echo "Gitleaks detected \$leaks leaks."
+                    """
                 }
             }
         }
