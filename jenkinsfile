@@ -12,7 +12,7 @@ pipeline {
         TRIVY_REPORTS = "${WORKSPACE}/trivy-reports"
         APP_IMAGE = "${DOCKER_IMAGE}"
         SLACK_CHANNEL = '#nouveau-canal'
-        SLACK_CREDENTIAL = 'slack' // the ID of your Jenkins credential
+        SLACK_CREDENTIAL = 'slack' 
     }
 
     stages {
@@ -120,28 +120,19 @@ pipeline {
     }
     post {
         success {
-            slackSend(
-                channel: "${SLACK_CHANNEL}",
-                color: "good",
-                message: "✅ Pipeline succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                tokenCredentialId: "${SLACK_CREDENTIAL}"
-            )
+            sh """
+                curl -X POST -H 'Content-type: application/json' \
+                --data '{"text": "✅ SUCCESS: ${JOB_NAME} #${BUILD_NUMBER}"}' \
+                https://hooks.slack.com/services/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
+            """
         }
+
         failure {
-            slackSend(
-                channel: "${SLACK_CHANNEL}",
-                color: "danger",
-                message: "❌ Pipeline failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                tokenCredentialId: "${SLACK_CREDENTIAL}"
-            )
-        }
-        unstable {
-            slackSend(
-                channel: "${SLACK_CHANNEL}",
-                color: "warning",
-                message: "⚠️ Pipeline unstable: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                tokenCredentialId: "${SLACK_CREDENTIAL}"
-            )
+            sh """
+                curl -X POST -H 'Content-type: application/json' \
+                --data '{"text": "❌ FAILED: ${JOB_NAME} #${BUILD_NUMBER}"}' \
+                https://hooks.slack.com/services/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
+            """
         }
     }
 }
