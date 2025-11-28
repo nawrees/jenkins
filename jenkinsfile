@@ -146,16 +146,12 @@ pipeline {
 
     }
     post {
-    success {
-        sh '''
-        curl -X POST --data-urlencode "payload={\"channel\":\"#nouveau-canal\",\"username\":\"jenkins-bot\",\"text\":\"✅ Pipeline succeeded: ${JOB_NAME} #${BUILD_NUMBER}\",\"icon_emoji\":\":tada:\"}" https://hooks.slack.com/services/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
-        '''
+        success {
+            Println 'Pipeline completed successfully!'
+        }
+        failure {
+            Println 'Pipeline failed. Please check the logs.'
+        }
     }
-    failure {
-        sh '''
-        curl -X POST --data-urlencode "payload={\"channel\":\"#nouveau-canal\",\"username\":\"jenkins-bot\",\"text\":\"❌ Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}\",\"icon_emoji\":\":x:\"}" https://hooks.slack.com/services/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
-        '''
-    }
-}
 
 }
