@@ -102,17 +102,19 @@ pipeline {
                 script {
                     sh "mkdir -p ${TRIVY_REPORTS}"
                     sh """
-                        docker run --rm -v ${TRIVY_REPORTS}:/trivy-reports \
+                        docker run --rm \
+                            -v ${TRIVY_REPORTS}:/trivy-reports \
                             -v /var/run/docker.sock:/var/run/docker.sock \
                             aquasec/trivy:latest image \
-                            --format html \
-                            --output /trivy-reports/trivy-report.html \
+                            --format json \
+                            --output /trivy-reports/trivy-report.json \
                             ${DOCKER_IMAGE}
                     """
                     archiveArtifacts artifacts: 'trivy-reports/**', allowEmptyArchive: true
                 }
             }
         }
+
 
 
 
