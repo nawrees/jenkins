@@ -97,5 +97,23 @@ pipeline {
             }
         }
 
+        stage('Trivy Image Scan') {
+            steps {
+            script {
+            sh "mkdir -p ${TRIVY_REPORTS}"
+            sh """
+            docker run --rm -v ${TRIVY_REPORTS}:/trivy-reports 
+            -v /var/run/docker.sock:/var/run/docker.sock 
+            aquasec/trivy:latest image 
+            --format html 
+            --output /trivy-reports/trivy-report.html 
+            ${APP_IMAGE}
+            """
+            archiveArtifacts artifacts: 'trivy-reports/**', allowEmptyArchive: true
+            }
+            }
+            }
+
+
     }
 }
