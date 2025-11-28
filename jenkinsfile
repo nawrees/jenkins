@@ -120,22 +120,28 @@ pipeline {
     }
     post {
         success {
-            slackSend(channel: "${SLACK_CHANNEL}",
-                      color: "good",
-                      message: "✅ Pipeline succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                      tokenCredentialId: "${SLACK_CREDENTIAL}")
+            slackSend(
+                channel: "${SLACK_CHANNEL}",
+                color: "good",
+                message: "✅ Pipeline succeeded: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                tokenCredentialId: "${SLACK_CREDENTIAL}"
+            )
         }
         failure {
-            slackSend(channel: "${SLACK_CHANNEL}",
-                      color: "danger",
-                      message: "❌ Pipeline failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                      tokenCredentialId: "${SLACK_CREDENTIAL}")
+            slackSend(
+                channel: "${SLACK_CHANNEL}",
+                color: "danger",
+                message: "❌ Pipeline failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                tokenCredentialId: "${SLACK_CREDENTIAL}"
+            )
         }
         unstable {
-            slackSend(channel: "${SLACK_CHANNEL}",
-                      color: "warning",
-                      message: "⚠️ Pipeline unstable: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-                      tokenCredentialId: "${SLACK_CREDENTIAL}")
+            slackSend(
+                channel: "${SLACK_CHANNEL}",
+                color: "warning",
+                message: "⚠️ Pipeline unstable: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                tokenCredentialId: "${SLACK_CREDENTIAL}"
+            )
         }
     }
 }
