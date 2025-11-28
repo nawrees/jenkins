@@ -127,7 +127,7 @@ pipeline {
                 \\"text\\": \\"✅ Pipeline succeeded: ${JOB_NAME} #${BUILD_NUMBER}\\",
                 \\"icon_emoji\\": \\":tada:\\"
             }" \
-            https://hooks.slack.com/services/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
+            https://hooks.slack.com/services/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
             """
         }
         failure {
@@ -138,7 +138,7 @@ pipeline {
                 \\"text\\": \\"❌ Pipeline failed: ${JOB_NAME} #${BUILD_NUMBER}\\",
                 \\"icon_emoji\\": \\":x:\\"
             }" \
-            https://hooks.slack.com/services/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
+            https://hooks.slack.com/services/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
             """
         }
     }
